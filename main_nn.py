@@ -14,6 +14,7 @@ import utils.util as util
 from models.fnn import FNNModel
 
 FEATURE_SIZE = 4096
+WIDTH = HEIGHT = 64
 NUM_CLASSES = 12
 
 parser = argparse.ArgumentParser()
@@ -25,6 +26,11 @@ parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
 parser.add_argument('--model', choices=['fnn','cnn'], default='fnn')
 parser.add_argument('--nonlinear', choices=['relu','tanh','sigmoid'], default='relu')
+# CNN Parameters
+parser.add_argument('--channel', type=int, nargs='+')
+parser.add_argument('--kernel_size', type=int, nargs='+')
+parser.add_argument('--maxpool_kernel_size', type=int, nargs='+')
+# FNN Parameters
 parser.add_argument('--affine_layers', type=int, nargs='+')
 
 parser.add_argument('--deviceId', type=int, default=-1, help='train model on ith gpu. -1:cpu, 0:auto_select')
@@ -110,7 +116,7 @@ logger.info("Prepare train, dev and test data ... cost %.4fs" % (time.time()-sta
 if opt.model == 'fnn':
     train_model = FNNModel(FEATURE_SIZE, NUM_CLASSES, layers=opt.affine_layers, dropout=opt.dropout, nonlinear=opt.nonlinear, batchnorm=opt.batchnorm, device=opt.device)
 elif opt.model == 'cnn':
-    train_model = CNNModel(NUM_CLASSES,)
+    train_model = CNNModel(WIDTH, HEIGHT, NUM_CLASSES, opt.channel, opt.kernel_size, opt.maxpool_kernel_size, nonlinear=opt.nonlinear, dropout=opt.dropout, device=opt.device)
 else:
     raise ValueError('[Error]: unknown neural network model type!')
 train_model = train_model.to(opt.device)
