@@ -25,5 +25,5 @@ def collate_fn_for_data(batch):
         feats, label = list(zip(*batch))
         return torch.tensor(torch.stack(feats, dim=0), dtype=torch.float), torch.tensor(torch.stack(label, dim=0), dtype=torch.long)
     else:
-        return torch.tensor(torch.stack(feats, dim=0), dtype=torch.float)
+        return torch.tensor(torch.stack(batch, dim=0), dtype=torch.float)
 

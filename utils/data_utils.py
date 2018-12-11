@@ -39,7 +39,7 @@ def write_csv_result(result, outfile=None):
     if outfile is None:
         outfile = os.path.join(DATAROOT, outfile)
     if len(result.shape) == 1:
-        result = np.hstack([np.arange(len(result))[:,np.newaxis], a[:, np.newaxis]])
+        result = np.hstack([np.arange(len(result))[:,np.newaxis], result[:, np.newaxis]])
     np.savetxt(outfile, result, delimiter=',', header='id,categories', comments='',fmt="%d,%d")
 
 

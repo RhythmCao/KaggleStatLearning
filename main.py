@@ -138,7 +138,7 @@ elif opt.optim.lower() == 'rmsprop':
 #################################################################
 
 def decode(data_iter, eval_model, write_result=None, add_loss=False):
-    count, eval_loss, has_label = 0, [], True
+    total, count, eval_loss, has_label = 0, 0, [], True
     result = []
     for j, data in enumerate(data_iter):
         if type(data) == tuple and len(data) == 2:
@@ -151,14 +151,15 @@ def decode(data_iter, eval_model, write_result=None, add_loss=False):
         scores = eval_model(data)
         pred = scores.argmax(dim=1)
         if label is not None:
+            total += len(pred)
             count += torch.sum(pred==label).item()
             if add_loss:
                 eval_loss.append(loss_function(scores, label))
         result.append(pred.cpu().numpy())
     if write_result is not None:
-        write_csv_result(np.concatenate(pred, axis=0), outfile=write_result)
+        write_csv_result(np.concatenate(result, axis=0), outfile=write_result)
     if has_label:
-        eval_acc = count*100.0/len(data_iter)
+        eval_acc = count*100.0/total
         if add_loss:
             eval_loss = np.sum(eval_loss, axis=0)
             return eval_acc, eval_loss
@@ -207,7 +208,6 @@ if not opt.testing:
         logger.info('Evaluation:\tEpoch : %d\tTime : %.4fs\tLoss : %.5f\tAcc : %.4f' % (i, time.time() - start_time, loss_val, accuracy_v))
         start_time = time.time()
         decode(test_iter, train_model, write_result=os.path.join(exp_path, 'test.iter'+str(i)))
-        logger.info('Evaluation:\tEpoch : %d\tTime : %.4fs\tAcc : %.4f' % (i, time.time() - start_time, accuracy_t))
         if accuracy_v > best_result['best_dev_acc'] or ( accuracy_v == best_result['best_dev_acc'] and loss_val < best_result['best_dev_loss'] ):
             train_model.save_model(os.path.join(exp_path, 'train.model'))
             best_result['epoch'] = i
@@ -220,4 +220,3 @@ else:
     test_model.eval()
     start_time = time.time()
     decode(test_iter, train_model, write_result=os.path.join(exp_path,'result.csv'))
-    logger.info('Evaluation:\tTime : %.4fs\tAcc : %.4f' % (time.time() - start_time, accuracy))
