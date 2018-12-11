@@ -50,7 +50,7 @@ class FNNModel(nn.Module):
             elif self.nonlinear=='tanh':
                 infeats=F.tanh(outfeats)
             else:
-                raise ValueError('[Error]:unknown nonlinearity!')
+                infeats = outfeats # no non-linear activation
         scores = self.linear_layer[self.num_layers](self.dropout_layer(infeats))
         scores = F.log_softmax(scores, dim=-1) # batch_size, num_classes
         return scores

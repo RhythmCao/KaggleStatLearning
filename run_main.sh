@@ -10,6 +10,6 @@ batchSize=64
 max_norm=5
 max_epoch=64
 deviceId=0
-python main.py --experiment $exp --model $model --nonlinear $nonlinear \
+python main_nn.py --experiment $exp --model $model --nonlinear $nonlinear \
     --affine_layers 512 128 --lr $lr --l2 $l2 --dropout $dropout --batchSize $batchSize --max_epoch $max_epoch --max_norm $max_norm \
     --optim $optim --deviceId $deviceId
