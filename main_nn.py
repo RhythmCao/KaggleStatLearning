@@ -23,7 +23,7 @@ parser.add_argument('--testing', action='store_true', help='Only test your model
 parser.add_argument('--read_model', required=False, help='Only test: read model from this file')
 parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
-parser.add_argument('--model', choices=['fnn','cnn','svm','lda'], default='fnn')
+parser.add_argument('--model', choices=['fnn','cnn'], default='fnn')
 parser.add_argument('--nonlinear', choices=['relu','tanh','sigmoid'], default='relu')
 parser.add_argument('--affine_layers', type=int, nargs='+')
 
@@ -109,13 +109,17 @@ logger.info("Prepare train, dev and test data ... cost %.4fs" % (time.time()-sta
 
 if opt.model == 'fnn':
     train_model = FNNModel(FEATURE_SIZE, NUM_CLASSES, layers=opt.affine_layers, dropout=opt.dropout, nonlinear=opt.nonlinear, batchnorm=opt.batchnorm, device=opt.device)
-    train_model = train_model.to(opt.device)
-    if not opt.testing:
-        train_model.init_weight(opt.init_weight)
-        logger.info("Train model init weights ... ...")
-    if opt.read_model:
-        train_model.load_model(opt.read_model+'.model')
-        logger.info("Load model from %s ..." % (opt.read_model))
+elif opt.model == 'cnn':
+    train_model = CNNModel(NUM_CLASSES,)
+else:
+    raise ValueError('[Error]: unknown neural network model type!')
+train_model = train_model.to(opt.device)
+if not opt.testing:
+    train_model.init_weight(opt.init_weight)
+    logger.info("Train model init weights ... ...")
+if opt.read_model:
+    train_model.load_model(opt.read_model+'.model')
+    logger.info("Load model from %s ..." % (opt.read_model))
 
 # loss function
 loss_function = nn.NLLLoss(reduction='sum')
