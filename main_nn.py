@@ -12,6 +12,7 @@ from utils.data_iter import ImageDataset, collate_fn_for_data
 from utils.data_utils import load_train_data, load_test_data, write_csv_result
 import utils.util as util
 from models.fnn import FNNModel
+from models.cnn import CNNModel
 
 FEATURE_SIZE = 4096
 WIDTH = HEIGHT = 64
@@ -27,11 +28,13 @@ parser.add_argument('--out_path', required=False, help='Only test: out_path')
 parser.add_argument('--model', choices=['fnn','cnn'], default='fnn')
 parser.add_argument('--nonlinear', choices=['relu','tanh','sigmoid'], default='relu')
 # CNN Parameters
-parser.add_argument('--channel', type=int, nargs='+')
-parser.add_argument('--kernel_size', type=int, nargs='+')
-parser.add_argument('--maxpool_kernel_size', type=int, nargs='+')
+cnn_paras = parser.add_argument_group('cnn parameters')
+cnn_paras.add_argument('--channel', type=int, nargs='+')
+cnn_paras.add_argument('--kernel_size', type=int, nargs='+')
+cnn_paras.add_argument('--maxpool_kernel_size', type=int, nargs='+')
 # FNN Parameters
-parser.add_argument('--affine_layers', type=int, nargs='+')
+fnn_paras = parser.add_argument_group('fnn parameters')
+fnn_paras.add_argument('--affine_layers', type=int, nargs='+')
 
 parser.add_argument('--deviceId', type=int, default=-1, help='train model on ith gpu. -1:cpu, 0:auto_select')
 parser.add_argument('--random_seed', type=int, default=999, help='set initial random seed')
