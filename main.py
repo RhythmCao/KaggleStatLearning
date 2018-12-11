@@ -197,7 +197,7 @@ if not opt.testing:
         print('[learning] epoch %i >> %3.2f%%'%(i,100),'completed in %.2f (sec) <<'%(time.time()-start_time))
         epoch_loss = np.sum(losses, axis=0)
         train_acc = count*100.0/len(train_data)
-        logger.info('Training:\tEpoch : %d\tTime : %.4fs\t Loss: %.5f \t Acc: %.2f%%' % (i, time.time() - start_time, epoch_loss, train_acc))
+        logger.info('Training:\tEpoch : %d\tTime : %.4fs\t Loss: %.5f \t Acc: %.4f%%' % (i, time.time() - start_time, epoch_loss, train_acc))
         best_result['epoch_loss'].append((epoch_loss, train_acc))
         gc.collect()
 
@@ -205,7 +205,7 @@ if not opt.testing:
         train_model.eval()
         start_time = time.time()
         accuracy_v, loss_val = decode(dev_iter, train_model, add_loss=True)
-        logger.info('Evaluation:\tEpoch : %d\tTime : %.4fs\tLoss : %.5f\tAcc : %.4f' % (i, time.time() - start_time, loss_val, accuracy_v))
+        logger.info('Evaluation:\tEpoch : %d\tTime : %.4fs\tLoss : %.5f\tAcc : %.4f%%' % (i, time.time() - start_time, loss_val, accuracy_v))
         start_time = time.time()
         decode(test_iter, train_model, write_result=os.path.join(exp_path, 'test.iter'+str(i)))
         if accuracy_v > best_result['best_dev_acc'] or ( accuracy_v == best_result['best_dev_acc'] and loss_val < best_result['best_dev_loss'] ):
