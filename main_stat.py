@@ -32,9 +32,12 @@ svm_paras.add_argument('--coef0', type=float, default=0)
 svm_paras.add_argument('--penalty', choices=['l1','l2'], default='l2')
 svm_paras.add_argument('--loss', choices=['hinge','squared_hinge'], default='squared_hinge')
 svm_paras.add_argument('--dual', action='store_true')
-svm_paras.add_argument('--tol', type=float, default=1e-4)
 lda_paras = parser.add_argument_group('LDA model parameters')
-# lda_paras.add_argument()
+lda_paras.add_argument()
+lda_paras.add_argument()
+lda_paras.add_argument()
+
+parser.add_argument('--tol', type=float, default=1e-4)
 parser.add_argument('--random_seed', type=int, default=999, help='set initial random seed')
 
 opt = parser.parse_args()
@@ -50,9 +53,9 @@ logFormatter = logging.Formatter('%(message)s') #('%(asctime)s - %(levelname)s -
 logger = logging.getLogger('mylogger')
 logger.setLevel(logging.DEBUG)
 if opt.testing:
-    fileHandler = logging.FileHandler('%s/log_test.txt' % (exp_path), mode='w')
+    fileHandler = logging.FileHandler('%s/log_test_%s.txt' % (exp_path, opt.split_ratio), mode='w')
 else:
-    fileHandler = logging.FileHandler('%s/log_train.txt' % (exp_path), mode='w') # override written
+    fileHandler = logging.FileHandler('%s/log_train_%s.txt' % (exp_path, opt.split_ratio), mode='w') # override written
 fileHandler.setFormatter(logFormatter)
 logger.addHandler(fileHandler)
 if not opt.noStdout:
@@ -92,14 +95,14 @@ elif opt.model == 'lda':
 
 if not opt.testing:
     train_model.train(train_data, train_label)
-    train_model.save_model(os.path.join(exp_path, 'train.model'))
+    train_model.save_model(os.path.join(exp_path, 'train_%s.model' % (opt.split_ratio)))
     _, train_acc = train_model(train_data, train_label)
     logger.info('Training acc is %.4f' % (train_acc))
     if dev_data is not None:
         _, dev_acc = train_model(dev_data, dev_label)
         logger.info('Dev acc is %.4f' % (dev_acc))
     result = train_model(test_data)
-    write_csv_result(result, outfile=os.path.join(exp_path,'result.csv'))
+    write_csv_result(result, outfile=os.path.join(exp_path,'result_%s.csv' % (opt.split_ratio)))
 else:
     train_model.load_model(opt.read_model+'.model')
     result = train_model(test_data)
