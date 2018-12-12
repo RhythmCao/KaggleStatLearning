@@ -29,3 +29,34 @@ def hyperparam_string(options, tf=False):
         return os.path.join('tf_' + model_path, exp_name)
     else:
         return os.path.join(model_path, exp_name)
+
+def hyperparam_string_stat(options):
+    """Hyerparam string."""
+    model_path = 'model_%s' % (options.model)
+    exp_name = ''
+    if options.model == 'svm':
+        exp_name += 'type_%s__' % (options.type)
+        if options.type == 'svc':
+            exp_name += 'kernel_%s__' % (options.kernel)
+            exp_name += 'C_%s__' % (options.C)
+            exp_name += 'gamma_%s__' % (options.gamma)
+            exp_name += 'degree_%s__' % (options.degree)
+            exp_name += 'coef0_%s__' % (options.coef0)
+            exp_name += '%s' % (options.decision_function_shape)
+        elif options.type == 'nusvc':
+            exp_name += 'kernel_%s__' % (options.kernel)
+            exp_name += 'nu_%s__' % (options.nu)
+            exp_name += 'gamma_%s__' % (options.gamma)
+            exp_name += 'degree_%s__' % (options.degree)
+            exp_name += 'coef0_%s__' % (options.coef0)
+            exp_name += '%s' % (options.decision_function_shape)
+        else:
+            exp_name += 'penalty_%s__' % (options.penalty)
+            exp_name += 'loss_%s__' % (options.loss)
+            exp_name += 'dual_%s__' % (options.dual)
+            exp_name += 'C_%s__' % (options.C)
+            exp_name += '%s' % (options.decision_function_shape)
+    elif options.model == 'lda':
+        pass
+    
+    return os.path.join(model_path, exp_name)
