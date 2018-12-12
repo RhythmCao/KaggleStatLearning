@@ -8,7 +8,7 @@ from utils.data_utils import load_train_data, load_test_data, write_csv_result
 import utils.util as util
 
 from models.svm import SVMModel, SVCModel, NuSVCModel, LinearSVCModel
-from models.lda import LDAModel
+from models.lda import LDAModel, LinearDAModel, QuadraticDAModel
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--experiment', default='exp', help='Where to store samples and models')
@@ -19,9 +19,9 @@ parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
 parser.add_argument('--model', choices=['svm','lda'], default='svm')
 parser.add_argument('--split_ratio', type=float, help='split train data into dev data and train data')
+parser.add_argument('--type', choices=['svc','nusvc','linearsvc','lda','qda'], default='svc')
 
 svm_paras = parser.add_argument_group('SVM model parameters')
-svm_paras.add_argument('--type', choices=['svc','nusvc','linearsvc'], default='svc')
 svm_paras.add_argument('--gamma', choices=['scale','auto'], default='scale')
 svm_paras.add_argument('--C', type=float, default=1)
 svm_paras.add_argument('--nu', type=float, default=0.5)
@@ -32,15 +32,21 @@ svm_paras.add_argument('--coef0', type=float, default=0)
 svm_paras.add_argument('--penalty', choices=['l1','l2'], default='l2')
 svm_paras.add_argument('--loss', choices=['hinge','squared_hinge'], default='squared_hinge')
 svm_paras.add_argument('--dual', action='store_true')
+
 lda_paras = parser.add_argument_group('LDA model parameters')
-lda_paras.add_argument()
-lda_paras.add_argument()
-lda_paras.add_argument()
+lda_paras.add_argument('--reg_param', type=float, default=0.0)
+lda_paras.add_argument('--solver', choices=['svd','lsqr','eigen'], default='svd')
+lda_paras.add_argument('--shrinkage', type=float, help='shrinkage param used in LDA, if <0, shrinkage=None, if >1, shrinkage=auto')
 
 parser.add_argument('--tol', type=float, default=1e-4)
 parser.add_argument('--random_seed', type=int, default=999, help='set initial random seed')
 
 opt = parser.parse_args()
+if opt.shrinkage > 1:
+    opt.shrinkage = 'auto'
+if opt.solver == 'svd' or opt.shrinkage < 0:
+    opt.shrinkage = None
+
 if not opt.testing:
     exp_path = util.hyperparam_string_stat(opt)
     exp_path = os.path.join(opt.experiment, exp_path)
@@ -87,11 +93,18 @@ if opt.model == 'svm':
     elif opt.type == 'nusvc':
         train_model = NuSVCModel(kernel=opt.kernel, nu=opt.nu, degree=opt.degree, gamma=opt.gamma, coef0=opt.coef0,
                         tol=opt.tol, decision_function_shape=opt.decision_function_shape, random_state=opt.random_seed)
-    else:
+    elif opt.type == 'linearsvc':
         train_model = LinearSVCModel(penalty=opt.penalty, loss=opt.loss, dual=opt.dual, tol=opt.tol, 
                         C=opt.C, multi_class=opt.decision_function_shape, random_state=opt.random_seed)
+    else:
+        raise ValueError('[Error]: unknown svm type!')
 elif opt.model == 'lda':
-    pass
+    if opt.type == 'lda':
+        train_model = LinearDAModel(solver=opt.solver, shrinkage=opt.shrinkage, tol=opt.tol)
+    elif opt.type == 'qda':
+        train_model = QuadraticDAModel(reg_param=opt.reg_param, tol=opt.tol)
+    else:
+        raise ValueError('[Error]: unknown svm type!')
 
 if not opt.testing:
     train_model.train(train_data, train_label)

@@ -57,6 +57,11 @@ def hyperparam_string_stat(options):
             exp_name += 'C_%s__' % (options.C)
             exp_name += '%s' % (options.decision_function_shape)
     elif options.model == 'lda':
-        pass
+        exp_name += 'type_%s__' % (options.type)
+        if options.type == 'lda':
+            exp_name += 'solver_%s' % (options.solver)
+            exp_name += 'shrinkage_%s' % (options.shrinkage)
+        else:
+            exp_name += 'reg_%s' % (options.reg_param)
     
     return os.path.join(model_path, exp_name)

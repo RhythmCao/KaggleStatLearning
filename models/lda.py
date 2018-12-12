@@ -29,3 +29,16 @@ class LDAModel(object):
 
     def load_model(self, path):
         self.lda_model = pickle.load(path)
+
+class LinearDAModel(LDAModel):
+    def __init__(self, solver='svd',shrinkage=None, tol=1e-4):
+        super(LinearDAModel, self).__init__()
+        assert solver in ['svd','lsqr','eigen']
+        assert not (solver == 'svd' and shrinkage is not None)
+        assert shrinkage is None or shrinkage == 'auto' or type(shrinkage) == float
+        self.lda_model = LinearDiscriminantAnalysis(solver=solver, shrinkage=shrinkage, tol=tol)
+
+class QuadraticDAModel(LDAModel):
+    def __init__(self, reg_param, tol=1e-4):
+        super(QuadraticDAModel, self).__init__()
+        self.lda_model = QuadraticDiscriminantAnalysis(reg_param=reg_param, tol=tol)
