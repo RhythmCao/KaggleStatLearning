@@ -25,10 +25,10 @@ class LDAModel(object):
         return self.forward(*inputs, **kwargs)
 
     def save_model(self, path):
-        pickle.dump(self.lda_model, path)
+        pickle.dump(self.lda_model, open(path, 'wb'))
 
     def load_model(self, path):
-        self.lda_model = pickle.load(path)
+        self.lda_model = pickle.load(open(path, 'rb'))
 
 class LinearDAModel(LDAModel):
     def __init__(self, solver='svd',shrinkage=None, tol=1e-4):

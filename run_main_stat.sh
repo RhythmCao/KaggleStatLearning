@@ -2,7 +2,7 @@
 exp=exp
 model=svm # lda
 type=svc # nusvc, linearsvc, lda, qda
-split=0.2
+split=0
 
 gamma=scale # atuo
 C=1
@@ -14,9 +14,9 @@ coef0=0.0
 penalty=l2 # l1
 loss=squared_hinge # hinge
 
-reg_param=0
-solver=svd
-shrinkage=0 # float
+reg_param=0.5
+solver=lsqr # svd, lsqr, eigen
+shrinkage=0.5 # float
 
 python main_stat.py --experiment $exp --model $model --type $type --split_ratio $split \
             --kernel $kernel --gamma $gamma --C $C --nu $nu --decision_function_shape $decision_function_shape \

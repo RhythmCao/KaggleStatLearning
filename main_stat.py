@@ -36,7 +36,7 @@ svm_paras.add_argument('--dual', action='store_true')
 lda_paras = parser.add_argument_group('LDA model parameters')
 lda_paras.add_argument('--reg_param', type=float, default=0.0)
 lda_paras.add_argument('--solver', choices=['svd','lsqr','eigen'], default='svd')
-lda_paras.add_argument('--shrinkage', type=float, help='shrinkage param used in LDA, if <0, shrinkage=None, if >1, shrinkage=auto')
+lda_paras.add_argument('--shrinkage', type=float, default=0, help='shrinkage param used in LDA, if <0, shrinkage=None, if >1, shrinkage=auto')
 
 parser.add_argument('--tol', type=float, default=1e-4)
 parser.add_argument('--random_seed', type=int, default=999, help='set initial random seed')

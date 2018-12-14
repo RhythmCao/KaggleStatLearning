@@ -23,10 +23,10 @@ class SVMModel(object):
         return self.forward(*inputs, **kwargs)
 
     def save_model(self, path):
-        pickle.dump(self.svm_model, path)
+        pickle.dump(self.svm_model, open(path, 'wb'))
 
     def load_model(self, path):
-        self.svm_model = pickle.load(path)
+        self.svm_model = pickle.load(open(path, 'rb'))
 
 class SVCModel(SVMModel):
 
@@ -36,7 +36,7 @@ class SVCModel(SVMModel):
         assert kernel in ['rbf', 'poly', 'sigmoid', 'linear'] or callable(kernel)
         assert decision_function_shape in ['ovo','ovr']
         assert gamma in ['auto', 'scale']
-        self.svm_model = svm.SVC(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=ceof0,
+        self.svm_model = svm.SVC(C=C, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                     tol=tol, decision_function_shape=decision_function_shape, random_state=random_state)
 
 class NuSVCModel(SVMModel):
@@ -47,7 +47,7 @@ class NuSVCModel(SVMModel):
         assert kernel in ['rbf', 'poly', 'sigmoid', 'linear'] or callable(kernel)
         assert decision_function_shape in ['ovo','ovr']
         assert gamma in ['auto', 'scale']
-        self.svm_model = svm.NuSVC(nu=nu, kernel=kernel, degree=degree, gamma=gamma, coef0=ceof0,
+        self.svm_model = svm.NuSVC(nu=nu, kernel=kernel, degree=degree, gamma=gamma, coef0=coef0,
                     tol=tol, decision_function_shape=decision_function_shape, random_state=random_state)
 
 class LinearSVCModel(SVMModel):

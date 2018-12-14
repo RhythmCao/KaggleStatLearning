@@ -109,11 +109,11 @@ if not opt.testing:
     train_data, train_label, dev_data, dev_label = load_train_data(split_ratio=0.2)
     train_dataset = ImageDataset(train_data, train_label)
     dev_dataset = ImageDataset(dev_data, dev_label)
-    train_iter = DataLoader(train_dataset, batch_size=opt.batchSize, shuffle=True, collate_fn=collate_fn_for_data, num_workers=4)
-    dev_iter = DataLoader(dev_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=4)
+    train_iter = DataLoader(train_dataset, batch_size=opt.batchSize, shuffle=True, collate_fn=collate_fn_for_data, num_workers=1)
+    dev_iter = DataLoader(dev_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=1)
 test_data = load_test_data()
 test_dataset = ImageDataset(test_data)
-test_iter = DataLoader(test_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=4)
+test_iter = DataLoader(test_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=1)
 logger.info("Prepare train, dev and test data ... cost %.4fs" % (time.time()-start_time))
 
 if opt.model == 'fnn':
@@ -161,7 +161,8 @@ def decode(data_iter, eval_model, write_result=None, add_loss=False):
             label = None
             has_label = False
         data = data.to(opt.device)
-        scores = eval_model(data)
+        with torch.no_grad():
+            scores = eval_model(data)
         pred = scores.argmax(dim=1)
         if label is not None:
             total += len(pred)
@@ -169,6 +170,8 @@ def decode(data_iter, eval_model, write_result=None, add_loss=False):
             if add_loss:
                 eval_loss.append(loss_function(scores, label))
         result.append(pred.cpu().numpy())
+        gc.collect()
+
     if write_result is not None:
         write_csv_result(np.concatenate(result, axis=0), outfile=write_result)
     if has_label:
@@ -219,6 +222,7 @@ if not opt.testing:
         start_time = time.time()
         accuracy_v, loss_val = decode(dev_iter, train_model, add_loss=True)
         logger.info('Evaluation:\tEpoch : %d\tTime : %.4fs\tLoss : %.5f\tAcc : %.4f%%' % (i, time.time() - start_time, loss_val, accuracy_v))
+        gc.collect()
         start_time = time.time()
         decode(test_iter, train_model, write_result=os.path.join(exp_path, 'test.iter'+str(i)))
         if accuracy_v > best_result['best_dev_acc'] or ( accuracy_v == best_result['best_dev_acc'] and loss_val < best_result['best_dev_loss'] ):
@@ -226,6 +230,7 @@ if not opt.testing:
             best_result['epoch'] = i
             best_result['best_dev_acc'], best_result['best_dev_loss'] = accuracy_v, loss_val
             logger.info('NEW BEST:\tEpoch : %d\tBest Valid Acc : %.4f' % (i, accuracy_v))
+        gc.collect()
     logger.info('BEST RESULT: \tEpoch : %d\tBest Valid (Loss: %.5f Acc : %.4f)' % (best_result['epoch'], best_result['best_dev_loss'], best_result['best_dev_acc']))
 else:    
     logger.info("Testing starts at %s" % (time.asctime(time.localtime(time.time()))))
