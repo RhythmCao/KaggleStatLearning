@@ -1,0 +1,13 @@
+fnn relu
+Best Valid (Loss: 253.91040 Acc : 98.8462)
+Test 0.91324
+
+fnn sigmoid
+Best Valid (Loss: 168.13016 Acc : 98.5256)
+
+fnn tanh
+Best Valid (Loss: 111.68515 Acc : 98.7821)
+
+svm svc C=1 kernel=rbf decision=ovr gamma=auto
+train acc = 0.9946  dev acc = 0.9833
+Test 0.92371
