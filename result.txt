@@ -11,3 +11,11 @@ Best Valid (Loss: 111.68515 Acc : 98.7821)
 svm svc C=1 kernel=rbf decision=ovr gamma=auto
 train acc = 0.9946  dev acc = 0.9833
 Test 0.92371
+
+svm svc C=2 kernel=rbf decision=ovr gamma=auto
+train acc = 0.9972
+Test 0.92350
+
+svm svc C=2 kernel=rbf decision=ovr gamma=auto
+train acc = 0.9981
+Test 0.92414

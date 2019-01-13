@@ -25,6 +25,7 @@ parser.add_argument('--testing', action='store_true', help='Only test your model
 parser.add_argument('--read_model', required=False, help='Only test: read model from this file')
 parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
+parser.add_argument('--split_ratio', default=0.2, type=float)
 parser.add_argument('--model', choices=['fnn','cnn'], default='fnn')
 parser.add_argument('--nonlinear', choices=['relu','tanh','sigmoid'], default='relu')
 # CNN Parameters
@@ -106,7 +107,7 @@ np.random.seed(opt.random_seed)
 # load dataset
 start_time = time.time()
 if not opt.testing:
-    train_data, train_label, dev_data, dev_label = load_train_data(split_ratio=0.2)
+    train_data, train_label, dev_data, dev_label = load_train_data(split_ratio=opt.split_ratio)
     train_dataset = ImageDataset(train_data, train_label)
     dev_dataset = ImageDataset(dev_data, dev_label)
     train_iter = DataLoader(train_dataset, batch_size=opt.batchSize, shuffle=True, collate_fn=collate_fn_for_data, num_workers=1)

@@ -4,13 +4,13 @@ split=0
 
 # SVM or LDA Model
 model=svm # svm, lda
-type=nusvc # svc, nusvc, linearsvc, lda, qda
+type=svc # svc, nusvc, linearsvc, lda, qda
 
 if [ $type == 'svc' ] ;then
-    C=1
+    C=2
     kernel=rbf # rbf, linear, poly, sigmoid
     degree=3 # degree of the poly kernel function
-    gamma=auto # auto, scale
+    gamma=scale # auto, scale
     coef0=0.0 # only significant in poly and sigmoid
     decision_function_shape=ovr # ovo, ovr
     python main_stat.py --experiment $exp --model $model --type $type --split_ratio $split \
@@ -20,7 +20,7 @@ elif [ $type == 'nusvc' ] ;then
     nu=0.5 # upper bound on fraction of training errors and lower bound of fractions upport vectors
     kernel=rbf # rbf, linear, poly, sigmoid
     degree=3 # degree of the poly kernel function
-    gamma=scale # auto, scale
+    gamma=auto # auto, scale
     coef0=0.0 # only significant in poly and sigmoid
     decision_function_shape=ovr # ovo, ovr
     python main_stat.py --experiment $exp --model $model --type $type --split_ratio $split \
