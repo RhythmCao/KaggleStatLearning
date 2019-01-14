@@ -6,7 +6,6 @@ import os
 def hyperparam_string(options, tf=False):
     """Hyerparam string."""
     model_path = 'model_%s' % (options.model)
-    
     exp_name = ''
     if options.model == 'fnn':
         exp_name += 'layers_%s__' % (str(options.affine_layers).strip('[]').replace(',','_').replace(' ',''))
@@ -15,6 +14,8 @@ def hyperparam_string(options, tf=False):
         exp_name += 'kernel_%s__' % (str(options.kernel_size).strip('[]').replace(',','_').replace(' ',''))
         if options.maxpool_kernel_size != [] and options.maxpool_kernel_size is not None:
             exp_name += 'maxpoolkernel_%s__' % (str(options.maxpool_kernel_size).strip('[]').replace(',','_').replace(' ',''))
+    else:
+        raise ValueError('Unknown model type!')
     exp_name += 'nonlinear_%s__' % (options.nonlinear)
     exp_name += 'bs_%s__' % (options.batchSize)
     exp_name += 'dropout_%s__' % (options.dropout)
@@ -63,5 +64,23 @@ def hyperparam_string_stat(options):
             exp_name += 'shrinkage_%s' % (options.shrinkage)
         else:
             exp_name += 'reg_%s' % (options.reg_param)
-    
+    else:
+        raise ValueError('Unknown model type!')
     return os.path.join(model_path, exp_name)
+
+def hyperparam_string_class(options):
+    """Hyerparam string."""
+    model_path = 'model_%s' % (options.model)
+    exp_name = ''
+    if options.model == 'logistic':
+        exp_name += 'penalty_%s__' % (options.penalty)
+        exp_name += 'C_%s__' % (options.C)
+        exp_name += 'solver_%s' % (options.solver)
+    elif options.model == 'ridge':
+        exp_name += 'alpha_%s' % (options.alpha)
+    elif options.model == 'knn':
+        exp_name += 'k_%s__' % (options.k)
+        exp_name += 'weights_%s' % (options.weights)
+    else:
+        raise ValueError('Unknown model type!')
+    return os.path.join(model_path, exp_name)  
