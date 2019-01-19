@@ -1,26 +1,25 @@
 #!/bin/bash
 exp=exp
-split=0
-
-model=knn # logistic, ridge, knn
+normalize="z-score" # min-max, z-score, none
+model=ridge # logistic, ridge, knn
 
 if [ $model == 'logistic' ] ;then
     penalty=l2 # l1, l2
-    C="0.5 1.0 1.5 2 2.5 3 3.5 4 4.5 5" # smaller values specify stronger regularization
-    solver=liblinear # 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'
+    C="0.001 0.002 0.005 0.01 0.02 0.05 0.1" # smaller values specify stronger regularization
+    solver=sag # 'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'
     cv=5
-    python main_classifier.py --experiment $exp --model $model --split_ratio $split \
-                --penalty $penalty --C $C --solver $solver --cv $cv
+    python main_classifier.py --experiment $exp --model $model --cv $cv \
+                --penalty $penalty --C $C --solver $solver --normalize $normalize
 elif [ $model == 'ridge' ] ;then
-    alpha="0.5 1.0 1.5 2 2.5 3 3.5 4 4.5 5" # larger values specify stronger regularization
+    alpha="100000 1000000" # larger values specify stronger regularization
     cv=5
-    python main_classifier.py --experiment $exp --model $model --split_ratio $split \
-                --alpha $alpha --cv $cv
+    python main_classifier.py --experiment $exp --model $model --cv $cv \
+                --alpha $alpha --normalize $normalize --cv_score
 elif [ $model == 'knn' ] ;then
     k=9
     weights=uniform # 'uniform', 'distance'
-    python main_classifier.py --experiment $exp --model $model --split_ratio $split \
-                --k $k --weights $weights
+    python main_classifier.py --experiment $exp --model $model --cv $cv \
+                --k $k --weights $weights --normalize $normalize
 else
     echo "Unknown model type ... ..."
 fi

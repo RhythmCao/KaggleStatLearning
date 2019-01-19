@@ -2,6 +2,7 @@
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis 
 import pickle
 import numpy as np
+from sklearn.model_selection import cross_val_score
 
 class LDAModel(object):
 
@@ -20,6 +21,9 @@ class LDAModel(object):
         self.lda_model.fit(fit_x, fit_y)
         score = self.lda_model.score(fit_x, fit_y)
         return score
+
+    def get_cv_accuracy(self, train_data, train_label, cv=5):
+        return np.mean(cross_val_score(self.lda_model, train_data, train_label, cv=cv))
 
     def __call__(self, *inputs, **kwargs):
         return self.forward(*inputs, **kwargs)

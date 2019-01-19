@@ -2,6 +2,8 @@
 from sklearn import svm
 import pickle
 import numpy as np
+from sklearn.model_selection import cross_val_score
+
 class SVMModel(object):
     def __init__(self):
         super(SVMModel, self).__init__()
@@ -18,6 +20,9 @@ class SVMModel(object):
         self.svm_model.fit(fit_x, fit_y)
         score = self.svm_model.score(fit_x, fit_y)
         return score
+
+    def get_cv_accuracy(self, train_data, train_label, cv=5):
+        return np.mean(cross_val_score(self.svm_model, train_data, train_label, cv=cv))
 
     def __call__(self, *inputs, **kwargs):
         return self.forward(*inputs, **kwargs)
@@ -58,3 +63,4 @@ class LinearSVCModel(SVMModel):
         assert loss in ['squared_hinge', 'hinge']
         assert multi_class in ['ovr','crammer_singer']
         self.svm_model = svm.LinearSVC(penalty=penalty, loss=loss, dual=dual, tol=tol, C=C, multi_class=multi_class, random_state=random_state)
+        

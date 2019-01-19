@@ -13,13 +13,10 @@ from models.lda import LDAModel, LinearDAModel, QuadraticDAModel
 parser = argparse.ArgumentParser()
 parser.add_argument('--experiment', default='exp', help='Where to store samples and models')
 parser.add_argument('--noStdout', action='store_true', help='Only log to a file; no stdout')
-parser.add_argument('--testing', action='store_true', help='Only test your model (default is training && testing)')
-parser.add_argument('--read_model', required=False, help='Only test: read model from this file')
-parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
 parser.add_argument('--model', choices=['svm','lda'], default='svm')
-parser.add_argument('--split_ratio', type=float, help='split train data into dev data and train data')
 parser.add_argument('--type', choices=['svc','nusvc','linearsvc','lda','qda'], default='svc')
+parser.add_argument('--normalize', choices=['min-max', 'z-score', 'none'], required=True)
 
 svm_paras = parser.add_argument_group('SVM model parameters')
 svm_paras.add_argument('--gamma', choices=['scale','auto'], default='scale')
@@ -38,6 +35,7 @@ lda_paras.add_argument('--reg_param', type=float, default=0.0)
 lda_paras.add_argument('--solver', choices=['svd','lsqr','eigen'], default='svd')
 lda_paras.add_argument('--shrinkage', type=float, default=0, help='shrinkage param used in LDA, if <0, shrinkage=None, if >1, shrinkage=auto')
 
+parser.add_argument('--cv', type=int, default=5, help='K-fold cross validation, default k=5')
 parser.add_argument('--tol', type=float, default=1e-4)
 parser.add_argument('--random_seed', type=int, default=999, help='set initial random seed')
 
@@ -47,21 +45,17 @@ if opt.shrinkage > 1:
 if opt.solver == 'svd' or opt.shrinkage < 0:
     opt.shrinkage = None
 
-if not opt.testing:
-    exp_path = util.hyperparam_string_stat(opt)
-    exp_path = os.path.join(opt.experiment, exp_path)
-else:
-    exp_path = opt.out_path
+exp_path = util.hyperparam_string_stat(opt)
+if opt.normalize != 'none':
+    exp_path += '__norm_minmax' if opt.normalize == 'min-max' else '__norm_zscore'
+exp_path = os.path.join(opt.experiment, exp_path)
 if not os.path.exists(exp_path):
     os.makedirs(exp_path)
 
 logFormatter = logging.Formatter('%(message)s') #('%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('mylogger')
 logger.setLevel(logging.DEBUG)
-if opt.testing:
-    fileHandler = logging.FileHandler('%s/log_test_%s.txt' % (exp_path, opt.split_ratio), mode='w')
-else:
-    fileHandler = logging.FileHandler('%s/log_train_%s.txt' % (exp_path, opt.split_ratio), mode='w') # override written
+fileHandler = logging.FileHandler('%s/log_train.txt' % (exp_path), mode='w') # override written
 fileHandler.setFormatter(logFormatter)
 logger.addHandler(fileHandler)
 if not opt.noStdout:
@@ -77,13 +71,8 @@ np.random.seed(opt.random_seed)
 
 # load dataset
 start_time = time.time()
-if not opt.testing:
-    if opt.split_ratio > 0:
-        train_data, train_label, dev_data, dev_label = load_train_data(split_ratio=opt.split_ratio)
-    else:
-        train_data, train_label = load_train_data(split_ratio=0)
-        dev_data = None
-test_data = load_test_data()
+train_data, train_label, paras = load_train_data(split_ratio=0, normalize=opt.normalize)
+test_data = load_test_data(normalize=opt.normalize, paras=paras)
 logger.info("Prepare data ... cost %.4fs" % (time.time()-start_time))
 
 if opt.model == 'svm':
@@ -104,19 +93,16 @@ elif opt.model == 'lda':
     elif opt.type == 'qda':
         train_model = QuadraticDAModel(reg_param=opt.reg_param, tol=opt.tol)
     else:
-        raise ValueError('[Error]: unknown svm type!')
+        raise ValueError('[Error]: unknown lda type!')
 
-if not opt.testing:
-    train_model.train(train_data, train_label)
-    train_model.save_model(os.path.join(exp_path, 'train_%s.model' % (opt.split_ratio)))
-    _, train_acc = train_model(train_data, train_label)
-    logger.info('Training acc is %.4f' % (train_acc))
-    if dev_data is not None:
-        _, dev_acc = train_model(dev_data, dev_label)
-        logger.info('Dev acc is %.4f' % (dev_acc))
-    result = train_model(test_data)
-    write_csv_result(result, outfile=os.path.join(exp_path,'result_%s.csv' % (opt.split_ratio)))
-else:
-    train_model.load_model(opt.read_model+'.model')
-    result = train_model(test_data)
-    write_csv_result(result, os.path.join(exp_path,'result.csv'))
+score = train_model.train(train_data, train_label)
+train_model.save_model(os.path.join(exp_path, 'train.model'))
+_, train_acc = train_model(train_data, train_label)
+logger.info('Training acc is %.4f' % (train_acc))
+if opt.cv > 0:
+    scores = train_model.get_cv_accuracy(train_data, train_label, cv=opt.cv)
+    logger.info("Cross validation accuracy is %.4f" % (scores))
+logger.info('Start predicting labels on Test set ...')
+result = train_model(test_data)
+logger.info('Start writing results into file %s' % (os.path.join(exp_path,'result.csv')))
+write_csv_result(result, outfile=os.path.join(exp_path,'result.csv'))
