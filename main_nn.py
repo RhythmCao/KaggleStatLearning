@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import numpy as np
-import logging
+import logging, pickle
+import matplotlib.pyplot as plt
 import gc
 
 from utils.data_iter import ImageDataset, collate_fn_for_data
@@ -26,6 +27,7 @@ parser.add_argument('--read_model', required=False, help='Only test: read model 
 parser.add_argument('--out_path', required=False, help='Only test: out_path')
 
 parser.add_argument('--split_ratio', default=0.2, type=float)
+parser.add_argument('--normalize', choices=['min-max', 'z-score', 'none'], required=True)
 parser.add_argument('--model', choices=['fnn','cnn'], default='fnn')
 parser.add_argument('--nonlinear', choices=['relu','tanh','sigmoid'], default='relu')
 # CNN Parameters
@@ -59,6 +61,8 @@ if opt.test_batchSize == 0:
 
 if not opt.testing:
     exp_path = util.hyperparam_string(opt)
+    if opt.normalize != 'none':
+        exp_path += '__norm_minmax' if opt.normalize == 'min-max' else '__norm_zscore'
     exp_path = os.path.join(opt.experiment, exp_path)
 else:
     exp_path = opt.out_path
@@ -107,12 +111,14 @@ np.random.seed(opt.random_seed)
 # load dataset
 start_time = time.time()
 if not opt.testing:
-    train_data, train_label, dev_data, dev_label = load_train_data(split_ratio=opt.split_ratio)
+    train_data, train_label, dev_data, dev_label, paras = load_train_data(split_ratio=opt.split_ratio, normalize=opt.normalize)
+    pickle.dump(paras, open(os.path.join(exp_path, 'paras.pkl'), 'wb'))
     train_dataset = ImageDataset(train_data, train_label)
     dev_dataset = ImageDataset(dev_data, dev_label)
     train_iter = DataLoader(train_dataset, batch_size=opt.batchSize, shuffle=True, collate_fn=collate_fn_for_data, num_workers=1)
     dev_iter = DataLoader(dev_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=1)
-test_data = load_test_data()
+paras = pickle.load(open(os.path.join(exp_path, 'paras.pkl'), 'rb'))
+test_data = load_test_data(normalize=opt.normalize, paras=paras)
 test_dataset = ImageDataset(test_data)
 test_iter = DataLoader(test_dataset, batch_size=opt.test_batchSize, shuffle=False, collate_fn=collate_fn_for_data, num_workers=1)
 logger.info("Prepare train, dev and test data ... cost %.4fs" % (time.time()-start_time))
@@ -150,6 +156,15 @@ elif opt.optim.lower() == 'rmsprop':
 #################################################################
 ################## Training and Decoding ########################
 #################################################################
+def draw_loss_changes(path):
+    losses = pickle.load(open(path, 'rb'))
+    losses = np.array(losses)
+    plt.figure()
+    plt.plot(np.arange(len(losses))+1, losses)
+    plt.xlabel('Epoch')
+    plt.ylabel('Losses')
+    plt.title('Loss changes during training')
+    plt.show()
 
 def decode(data_iter, eval_model, write_result=None, add_loss=False):
     total, count, eval_loss, has_label = 0, 0, [], True
@@ -233,6 +248,8 @@ if not opt.testing:
             logger.info('NEW BEST:\tEpoch : %d\tBest Valid Acc : %.4f' % (i, accuracy_v))
         gc.collect()
     logger.info('BEST RESULT: \tEpoch : %d\tBest Valid (Loss: %.5f Acc : %.4f)' % (best_result['epoch'], best_result['best_dev_loss'], best_result['best_dev_acc']))
+    pickle.dump(list(zip(*best_result['epoch_loss']))[0], open(os.path.join(exp_path, 'epoch_loss.pkl'), 'wb'))
+    draw_loss_changes(os.path.join(exp_path, 'epoch_loss.pkl'))
 else:    
     logger.info("Testing starts at %s" % (time.asctime(time.localtime(time.time()))))
     test_model = train_model
